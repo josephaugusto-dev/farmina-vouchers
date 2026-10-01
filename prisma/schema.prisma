@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Loja {
+  id            String          @id @default(cuid())
+  nome          String
+  vendedor      String
+  pin           String
+  zona          String?
+  telefone      String?
+  email         String?
+  observacoes   String?
+  registros     RegistroMensal[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model RegistroMensal {
+  id          String   @id @default(cuid())
+  loja        Loja     @relation(fields: [lojaId], references: [id])
+  lojaId      String
+  mes         String   // formato "2026-09"
+  vendas      Int?
+  validacoes  Int
+  origem      String   // "manual" ou "imagem_ia"
+  createdAt   DateTime @default(now())
+
+  @@unique([lojaId, mes])
+}
+
+model MetaMensal {
+  id     String @id @default(cuid())
+  mes    String @unique // formato "2026-09"
+  valor  Int
+}
