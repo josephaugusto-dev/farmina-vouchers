@@ -30,9 +30,22 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json()
 
+  const dadosPermitidos = ['nome', 'vendedor', 'pin', 'zona', 'telefone', 'email', 'observacoes']
+  const data: Record<string, string | null> = {}
+
+  for (const campo of dadosPermitidos) {
+    if (campo in body) {
+      data[campo] = body[campo]
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: 'Nenhum campo para atualizar' }, { status: 400 })
+  }
+
   const loja = await prisma.loja.update({
     where: { id },
-    data: { observacoes: body.observacoes },
+    data,
   })
 
   return NextResponse.json({ loja })
@@ -44,8 +57,6 @@ export async function DELETE(
 ) {
   const { id } = await params
 
-  // Remove primeiro os registros mensais da loja (senão o banco bloqueia
-  // a exclusão por causa da referência lojaId em RegistroMensal).
   await prisma.registroMensal.deleteMany({ where: { lojaId: id } })
   await prisma.loja.delete({ where: { id } })
 

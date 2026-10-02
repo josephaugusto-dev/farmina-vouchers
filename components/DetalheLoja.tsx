@@ -22,6 +22,15 @@ type LojaDetalhe = {
   registros: Registro[]
 }
 
+type FormEdicao = {
+  nome: string
+  vendedor: string
+  pin: string
+  zona: string
+  telefone: string
+  email: string
+}
+
 export default function DetalheLoja({
   lojaId,
   onClose,
@@ -34,12 +43,64 @@ export default function DetalheLoja({
   const [loja, setLoja] = useState<LojaDetalhe | null>(null)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
+  const [erroEdicao, setErroEdicao] = useState<string | null>(null)
+  const [form, setForm] = useState<FormEdicao>({
+    nome: '',
+    vendedor: '',
+    pin: '',
+    zona: '',
+    telefone: '',
+    email: '',
+  })
 
-  useEffect(() => {
+  function carregarLoja() {
     fetch(`/api/lojas/${lojaId}`)
       .then((res) => res.json())
-      .then((data) => setLoja(data.loja))
+      .then((data) => {
+        setLoja(data.loja)
+        setForm({
+          nome: data.loja.nome ?? '',
+          vendedor: data.loja.vendedor ?? '',
+          pin: data.loja.pin ?? '',
+          zona: data.loja.zona ?? '',
+          telefone: data.loja.telefone ?? '',
+          email: data.loja.email ?? '',
+        })
+      })
+  }
+
+  useEffect(() => {
+    carregarLoja()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lojaId])
+
+  async function salvarEdicao() {
+    if (!form.nome || !form.vendedor || !form.pin) {
+      setErroEdicao('Nome, vendedor e PIN são obrigatórios')
+      return
+    }
+
+    setSalvandoEdicao(true)
+    setErroEdicao(null)
+
+    const res = await fetch(`/api/lojas/${lojaId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+
+    if (!res.ok) {
+      setErroEdicao('Erro ao salvar as alterações')
+      setSalvandoEdicao(false)
+      return
+    }
+
+    setSalvandoEdicao(false)
+    setEditando(false)
+    carregarLoja()
+  }
 
   async function excluirLoja() {
     setExcluindo(true)
@@ -49,10 +110,12 @@ export default function DetalheLoja({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 animar-overlay">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl animar-modal">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-blue-950">{loja?.nome ?? 'Carregando...'}</h2>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--primary-dark)' }}>
+            {loja?.nome ?? 'Carregando...'}
+          </h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-700 text-xl leading-none"
@@ -63,28 +126,138 @@ export default function DetalheLoja({
 
         {loja && (
           <div className="px-6 py-5 space-y-5">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-slate-400 uppercase">Vendedor</p>
-                <p className="text-slate-800 font-medium">{loja.vendedor}</p>
+            {!editando ? (
+              <>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase">Vendedor</p>
+                    <p className="text-slate-800 font-medium">{loja.vendedor}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase">PIN</p>
+                    <p className="text-slate-800 font-medium font-mono">{loja.pin}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase">Telefone</p>
+                    <p className="text-slate-800 font-medium">{loja.telefone ?? '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase">Zona</p>
+                    <p className="text-slate-800 font-medium">{loja.zona ?? '—'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 uppercase">E-mail</p>
+                    <p className="text-slate-800 font-medium break-all">{loja.email ?? '—'}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setEditando(true)}
+                  className="text-sm font-medium hover:underline"
+                  style={{ color: 'var(--primary)' }}
+                >
+                  ✎ Editar informações da loja
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3 bg-slate-50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase">Editando cadastro</p>
+
+                <div>
+                  <label className="text-xs text-slate-400 uppercase">Nome da loja *</label>
+                  <input
+                    type="text"
+                    value={form.nome}
+                    onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase">Vendedor *</label>
+                    <input
+                      type="text"
+                      value={form.vendedor}
+                      onChange={(e) => setForm((f) => ({ ...f, vendedor: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase">PIN *</label>
+                    <input
+                      type="text"
+                      value={form.pin}
+                      onChange={(e) => setForm((f) => ({ ...f, pin: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 uppercase">Zona</label>
+                  <input
+                    type="text"
+                    value={form.zona}
+                    onChange={(e) => setForm((f) => ({ ...f, zona: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase">Telefone</label>
+                    <input
+                      type="text"
+                      value={form.telefone}
+                      onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase">E-mail</label>
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                {erroEdicao && <p className="text-sm text-red-600">{erroEdicao}</p>}
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={salvarEdicao}
+                    disabled={salvandoEdicao}
+                    className="text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50"
+                    style={{ background: 'var(--primary)' }}
+                  >
+                    {salvandoEdicao ? 'Salvando...' : 'Salvar alterações'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditando(false)
+                      setErroEdicao(null)
+                      if (loja) {
+                        setForm({
+                          nome: loja.nome,
+                          vendedor: loja.vendedor,
+                          pin: loja.pin,
+                          zona: loja.zona ?? '',
+                          telefone: loja.telefone ?? '',
+                          email: loja.email ?? '',
+                        })
+                      }
+                    }}
+                    className="text-sm text-slate-500 hover:text-slate-700 px-4 py-2"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-400 uppercase">PIN</p>
-                <p className="text-slate-800 font-medium font-mono">{loja.pin}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 uppercase">Telefone</p>
-                <p className="text-slate-800 font-medium">{loja.telefone ?? '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 uppercase">Zona</p>
-                <p className="text-slate-800 font-medium">{loja.zona ?? '—'}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs text-slate-400 uppercase">E-mail</p>
-                <p className="text-slate-800 font-medium break-all">{loja.email ?? '—'}</p>
-              </div>
-            </div>
+            )}
 
             <div>
               <p className="text-xs text-slate-400 uppercase mb-2">Histórico de validações</p>
