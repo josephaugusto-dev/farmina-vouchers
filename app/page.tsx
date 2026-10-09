@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { ArrowUpRight, ClipboardCheck, Plus, Search, Sparkles, TrendingUp } from 'lucide-react'
 import DetalheLoja from '@/components/DetalheLoja'
 import LancarRegistro from '@/components/LancarRegistro'
 import UploadImagemIA from '@/components/UploadImagemIA'
@@ -25,11 +26,11 @@ type Loja = {
   taxaConversao: number | null
 }
 
-function corConversao(taxa: number | null) {
-  if (taxa === null) return 'bg-gray-100 text-gray-500'
-  if (taxa < 30) return 'bg-red-100 text-red-700'
-  if (taxa < 60) return 'bg-yellow-100 text-yellow-700'
-  return 'bg-green-100 text-green-700'
+function classeConversao(taxa: number | null) {
+  if (taxa === null) return 'badge badge-neutro'
+  if (taxa < 30) return 'badge badge-baixo'
+  if (taxa < 60) return 'badge badge-medio'
+  return 'badge badge-alto'
 }
 
 export default function Home() {
@@ -46,6 +47,7 @@ export default function Home() {
   const [mostrarAdicionarLoja, setMostrarAdicionarLoja] = useState(false)
   const [mostrarVendas, setMostrarVendas] = useState(false)
   const [toasts, setToasts] = useState<ToastMensagem[]>([])
+  const [rolou, setRolou] = useState(false)
   const proximoIdToast = useRef(0)
 
   function mostrarToast(texto: string) {
@@ -75,6 +77,14 @@ export default function Home() {
       })
   }, [])
 
+  useEffect(() => {
+    function aoRolar() {
+      setRolou(window.scrollY > 8)
+    }
+    window.addEventListener('scroll', aoRolar, { passive: true })
+    return () => window.removeEventListener('scroll', aoRolar)
+  }, [])
+
   const totalValidacoes = lojas.reduce((soma, loja) => soma + (loja.validacoes ?? 0), 0)
   const progressoMeta = meta && meta > 0 ? Math.min((totalValidacoes / meta) * 100, 100) : 0
 
@@ -93,12 +103,15 @@ export default function Home() {
     mostrarToast('Meta atualizada')
   }
 
-  async function salvarObservacao(id: string, texto: string) {
+  async function salvarObservacao(id: string, texto: string, original: string | null) {
+    if (texto === (original ?? '')) return
+
     await fetch(`/api/lojas/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ observacoes: texto }),
     })
+    setLojas((atual) => atual.map((l) => (l.id === id ? { ...l, observacoes: texto } : l)))
     mostrarToast('Observação salva')
   }
 
@@ -111,39 +124,33 @@ export default function Home() {
   })
 
   return (
-    <main className="min-h-screen p-6" style={{ background: 'var(--background)' }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-1">
-          <Image src="/logo-farmina.png" alt="Farmina" width={40} height={40} className="rounded" />
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--primary-dark)' }}>
-            Farmina Vouchers
-          </h1>
-        </div>
-        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-          Monitoramento de validações por loja
-        </p>
-
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div
-            className="rounded-xl px-5 py-4 flex-1 min-w-55 border transition-shadow hover:shadow-md"
-            style={{ background: 'var(--white)', borderColor: '#E4E7EC' }}
-          >
-            <p className="text-xs uppercase" style={{ color: 'var(--text-secondary)' }}>
-              Validações no mês
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      <header className={`cabecalho ${rolou ? 'cabecalho-rolou' : ''}`}>
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-3">
+          <Image src="/logo-farmina.png" alt="Farmina" width={40} height={40} className="rounded" priority />
+          <div>
+            <h1 className="text-xl font-bold leading-tight" style={{ color: 'var(--primary-dark)' }}>
+              Farmina Vouchers
+            </h1>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Monitoramento de validações por loja
             </p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-6 pb-10 pt-6">
+        <div className="mb-6 flex flex-wrap gap-4">
+          <div className="card min-w-55 flex-1 px-5 py-4">
+            <p className="rotulo">Validações no mês</p>
+            <p className="text-3xl font-bold" style={{ color: 'var(--primary)' }}>
               <NumeroAnimado valor={totalValidacoes} />
             </p>
           </div>
 
-          <div
-            className="rounded-xl px-5 py-4 flex-1 min-w-65 border transition-shadow hover:shadow-md"
-            style={{ background: 'var(--white)', borderColor: '#E4E7EC' }}
-          >
+          <div className="card min-w-65 flex-1 px-5 py-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase" style={{ color: 'var(--text-secondary)' }}>
-                Meta ({mesMeta || '...'})
-              </p>
+              <p className="rotulo">Meta ({mesMeta || '...'})</p>
               {!editandoMeta && (
                 <button
                   onClick={() => {
@@ -159,78 +166,65 @@ export default function Home() {
             </div>
 
             {editandoMeta ? (
-              <div className="flex gap-2 items-center mt-1">
+              <div className="mt-1 flex items-center gap-2">
                 <input
                   type="number"
                   autoFocus
                   value={valorMetaInput}
                   onChange={(e) => setValorMetaInput(e.target.value)}
-                  className="w-24 px-2 py-1 border rounded text-slate-900"
-                  style={{ borderColor: '#E4E7EC' }}
+                  className="campo w-24"
                 />
-                <button
-                  onClick={salvarMeta}
-                  className="text-sm text-white px-3 py-1 rounded transition-colors"
-                  style={{ background: 'var(--primary)' }}
-                >
+                <button onClick={salvarMeta} className="btn btn-primary btn-sm">
                   Salvar
                 </button>
               </div>
             ) : (
               <>
-                <p className="text-2xl font-bold" style={{ color: 'var(--primary-dark)' }}>
+                <p className="text-3xl font-bold" style={{ color: 'var(--primary-dark)' }}>
                   <NumeroAnimado valor={totalValidacoes} /> / {meta ?? '—'}
                 </p>
-                <div className="w-full h-2 rounded-full mt-2 overflow-hidden" style={{ background: 'var(--primary-light)' }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${progressoMeta}%`, background: 'var(--primary)' }}
-                  />
+                <div className="barra-trilho mt-2">
+                  <div className="barra-fill" style={{ width: `${progressoMeta}%` }} />
                 </div>
               </>
             )}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center mb-4 gap-3">
-          <input
-            type="text"
-            placeholder="Buscar por loja ou vendedor..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="flex-1 max-w-md px-4 py-2 rounded-lg border text-slate-900 placeholder:text-slate-400 transition-shadow focus:outline-none focus:ring-2"
-            style={{ borderColor: '#E4E7EC' }}
-          />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="relative min-w-60 max-w-md flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: 'var(--text-secondary)' }}
+              aria-hidden
+            />
+            <input
+              type="text"
+              placeholder="Buscar por loja ou vendedor..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="campo w-full pl-10"
+            />
+          </div>
 
-          <button
-            onClick={() => setMostrarLancamento(true)}
-            className="text-white text-sm font-medium px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-md"
-            style={{ background: 'var(--primary)' }}
-          >
-            + Lançar validações
+          <button onClick={() => setMostrarLancamento(true)} className="btn btn-primary">
+            <ClipboardCheck className="ico ico-clip" aria-hidden />
+            Lançar validações
           </button>
 
-          <button
-            onClick={() => setMostrarVendas(true)}
-            className="text-white text-sm font-medium px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-md"
-            style={{ background: 'var(--primary-dark)' }}
-          >
-            💰 Atualizar vendas
+          <button onClick={() => setMostrarVendas(true)} className="btn btn-dark">
+            <TrendingUp className="ico ico-trend" aria-hidden />
+            Atualizar vendas
           </button>
 
-          <button
-            onClick={() => setMostrarUploadIA(true)}
-            className="bg-green-700 hover:bg-green-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            📷 Upload com IA
+          <button onClick={() => setMostrarUploadIA(true)} className="btn btn-ai">
+            <Sparkles className="ico ico-sparkle" aria-hidden />
+            Upload com IA
           </button>
 
-          <button
-            onClick={() => setMostrarAdicionarLoja(true)}
-            className="text-sm font-medium px-4 py-2 rounded-lg border transition-all hover:-translate-y-0.5 hover:shadow-md"
-            style={{ color: 'var(--primary-dark)', borderColor: 'var(--primary)' }}
-          >
-            + Adicionar loja à base
+          <button onClick={() => setMostrarAdicionarLoja(true)} className="btn btn-outline">
+            <Plus className="ico ico-rotate" aria-hidden />
+            Adicionar loja à base
           </button>
         </div>
 
@@ -242,37 +236,51 @@ export default function Home() {
           </div>
         ) : (
           <div
-            className="overflow-x-auto rounded-xl border animar-entrada"
-            style={{ background: 'var(--white)', borderColor: '#E4E7EC' }}
+            className="animar-entrada overflow-x-auto rounded-xl border bg-white"
+            style={{ borderColor: 'var(--border)' }}
           >
             <table className="w-full text-sm">
-              <thead style={{ background: 'var(--primary-light)', color: 'var(--primary-dark)' }} className="text-left">
+              <thead
+                className="text-left text-xs uppercase tracking-wide"
+                style={{ background: 'var(--primary-light)', color: 'var(--primary-dark)' }}
+              >
                 <tr>
-                  <th className="px-4 py-3">Loja</th>
-                  <th className="px-4 py-3">Vendedor</th>
-                  <th className="px-4 py-3">Mês</th>
-                  <th className="px-4 py-3">Vendas (média/mês)</th>
-                  <th className="px-4 py-3">Validações</th>
-                  <th className="px-4 py-3">Conversão</th>
-                  <th className="px-4 py-3">Observações</th>
+                  <th className="px-4 py-3 font-semibold">Loja</th>
+                  <th className="px-4 py-3 font-semibold">Vendedor</th>
+                  <th className="px-4 py-3 font-semibold">Mês</th>
+                  <th className="px-4 py-3 font-semibold">Vendas (média/mês)</th>
+                  <th className="px-4 py-3 font-semibold">Validações</th>
+                  <th className="px-4 py-3 font-semibold">Conversão</th>
+                  <th className="px-4 py-3 font-semibold">Observações</th>
                 </tr>
               </thead>
               <tbody>
+                {lojasFiltradas.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-8 text-center"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Nenhuma loja encontrada.
+                    </td>
+                  </tr>
+                )}
+
                 {lojasFiltradas.map((loja, i) => (
                   <tr
                     key={loja.id}
-                    className="border-t animar-entrada transition-colors"
-                    style={{ borderColor: '#F0F2F5', animationDelay: `${i * 25}ms` }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-light)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    className="linha-loja animar-entrada border-t"
+                    style={{ borderColor: '#F0F2F5', animationDelay: `${Math.min(i, 12) * 25}ms` }}
                   >
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setLojaSelecionada(loja.id)}
-                        className="font-medium hover:underline text-left"
+                        className="nome-loja inline-flex items-center gap-1 text-left font-medium"
                         style={{ color: 'var(--primary)' }}
                       >
                         {loja.nome}
+                        <ArrowUpRight className="seta-loja h-4 w-4" aria-hidden />
                       </button>
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-secondary)' }}>{loja.vendedor}</td>
@@ -280,7 +288,7 @@ export default function Home() {
                     <td className="px-4 py-3" style={{ color: 'var(--text-secondary)' }}>{loja.vendas ?? '—'}</td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-secondary)' }}>{loja.validacoes ?? '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${corConversao(loja.taxaConversao)}`}>
+                      <span className={classeConversao(loja.taxaConversao)}>
                         {loja.taxaConversao !== null ? `${loja.taxaConversao}%` : '—'}
                       </span>
                     </td>
@@ -289,8 +297,9 @@ export default function Home() {
                         type="text"
                         defaultValue={loja.observacoes ?? ''}
                         placeholder="Adicionar nota..."
-                        onBlur={(e) => salvarObservacao(loja.id, e.target.value)}
-                        className="w-full px-2 py-1 text-slate-900 placeholder:text-slate-400 border border-transparent hover:border-slate-200 rounded focus:outline-none transition-colors"
+                        onBlur={(e) => salvarObservacao(loja.id, e.target.value, loja.observacoes)}
+                        className="w-full rounded border border-transparent bg-transparent px-2 py-1 transition-colors placeholder:text-slate-400 hover:border-slate-200 focus:border-(--primary) focus:bg-white focus:outline-none"
+                        style={{ color: 'var(--text)' }}
                       />
                     </td>
                   </tr>
@@ -299,7 +308,7 @@ export default function Home() {
             </table>
           </div>
         )}
-      </div>
+      </main>
 
       {lojaSelecionada && (
         <DetalheLoja
@@ -361,6 +370,6 @@ export default function Home() {
       )}
 
       <Toast mensagens={toasts} />
-    </main>
+    </div>
   )
 }

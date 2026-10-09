@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Pencil, Trash2, X } from 'lucide-react'
 
 type Registro = {
   id: string
@@ -110,117 +111,118 @@ export default function DetalheLoja({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 animar-overlay">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl animar-modal">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+    <div className="overlay-modal animar-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="modal-card animar-modal max-h-[85vh] w-full max-w-lg overflow-y-auto">
+        <div
+          className="flex items-center justify-between border-b px-6 py-4"
+          style={{ borderColor: 'var(--border)' }}
+        >
           <h2 className="text-lg font-bold" style={{ color: 'var(--primary-dark)' }}>
             {loja?.nome ?? 'Carregando...'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 text-xl leading-none"
-          >
-            ×
+          <button onClick={onClose} className="btn-icone" aria-label="Fechar">
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
         {loja && (
-          <div className="px-6 py-5 space-y-5">
+          <div className="space-y-5 px-6 py-5">
             {!editando ? (
               <>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-xs text-slate-400 uppercase">Vendedor</p>
-                    <p className="text-slate-800 font-medium">{loja.vendedor}</p>
+                    <p className="rotulo">Vendedor</p>
+                    <p className="font-medium" style={{ color: 'var(--text)' }}>{loja.vendedor}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase">PIN</p>
-                    <p className="text-slate-800 font-medium font-mono">{loja.pin}</p>
+                    <p className="rotulo">PIN</p>
+                    <p className="font-mono font-medium" style={{ color: 'var(--text)' }}>{loja.pin}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase">Telefone</p>
-                    <p className="text-slate-800 font-medium">{loja.telefone ?? '—'}</p>
+                    <p className="rotulo">Telefone</p>
+                    <p className="font-medium" style={{ color: 'var(--text)' }}>{loja.telefone ?? '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase">Zona</p>
-                    <p className="text-slate-800 font-medium">{loja.zona ?? '—'}</p>
+                    <p className="rotulo">Zona</p>
+                    <p className="font-medium" style={{ color: 'var(--text)' }}>{loja.zona ?? '—'}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-slate-400 uppercase">E-mail</p>
-                    <p className="text-slate-800 font-medium break-all">{loja.email ?? '—'}</p>
+                    <p className="rotulo">E-mail</p>
+                    <p className="break-all font-medium" style={{ color: 'var(--text)' }}>{loja.email ?? '—'}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setEditando(true)}
-                  className="text-sm font-medium hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
                   style={{ color: 'var(--primary)' }}
                 >
-                  ✎ Editar informações da loja
+                  <Pencil className="h-4 w-4" aria-hidden />
+                  Editar informações da loja
                 </button>
               </>
             ) : (
-              <div className="space-y-3 bg-slate-50 rounded-xl p-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase">Editando cadastro</p>
+              <div className="space-y-3 rounded-xl p-4" style={{ background: 'var(--primary-light)' }}>
+                <p className="rotulo">Editando cadastro</p>
 
                 <div>
-                  <label className="text-xs text-slate-400 uppercase">Nome da loja *</label>
+                  <label className="rotulo">Nome da loja *</label>
                   <input
                     type="text"
                     value={form.nome}
                     onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    className="campo mt-1 w-full"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-slate-400 uppercase">Vendedor *</label>
+                    <label className="rotulo">Vendedor *</label>
                     <input
                       type="text"
                       value={form.vendedor}
                       onChange={(e) => setForm((f) => ({ ...f, vendedor: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                      className="campo mt-1 w-full"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase">PIN *</label>
+                    <label className="rotulo">PIN *</label>
                     <input
                       type="text"
                       value={form.pin}
                       onChange={(e) => setForm((f) => ({ ...f, pin: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                      className="campo mt-1 w-full"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-400 uppercase">Zona</label>
+                  <label className="rotulo">Zona</label>
                   <input
                     type="text"
                     value={form.zona}
                     onChange={(e) => setForm((f) => ({ ...f, zona: e.target.value }))}
-                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                    className="campo mt-1 w-full"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-slate-400 uppercase">Telefone</label>
+                    <label className="rotulo">Telefone</label>
                     <input
                       type="text"
                       value={form.telefone}
                       onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                      className="campo mt-1 w-full"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase">E-mail</label>
+                    <label className="rotulo">E-mail</label>
                     <input
                       type="email"
                       value={form.email}
                       onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                      className="campo mt-1 w-full"
                     />
                   </div>
                 </div>
@@ -228,12 +230,10 @@ export default function DetalheLoja({
                 {erroEdicao && <p className="text-sm text-red-600">{erroEdicao}</p>}
 
                 <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={salvarEdicao}
-                    disabled={salvandoEdicao}
-                    className="text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50"
-                    style={{ background: 'var(--primary)' }}
-                  >
+                  <button onClick={salvarEdicao} disabled={salvandoEdicao} className="btn btn-primary btn-sm">
+                    {salvandoEdicao && (
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    )}
                     {salvandoEdicao ? 'Salvando...' : 'Salvar alterações'}
                   </button>
                   <button
@@ -251,7 +251,7 @@ export default function DetalheLoja({
                         })
                       }
                     }}
-                    className="text-sm text-slate-500 hover:text-slate-700 px-4 py-2"
+                    className="btn btn-ghost btn-sm"
                   >
                     Cancelar
                   </button>
@@ -260,54 +260,49 @@ export default function DetalheLoja({
             )}
 
             <div>
-              <p className="text-xs text-slate-400 uppercase mb-2">Histórico de validações</p>
-              <p className="text-xs text-slate-400 mb-2">
+              <p className="rotulo mb-2">Histórico de validações</p>
+              <p className="mb-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 O valor de vendas é uma estimativa da média mensal da loja, não um número oficial exato.
               </p>
               <div className="space-y-2">
                 {loja.registros.length === 0 && (
-                  <p className="text-sm text-slate-400">Nenhum registro ainda.</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Nenhum registro ainda.</p>
                 )}
                 {loja.registros.map((r) => (
                   <div
                     key={r.id}
-                    className="flex justify-between items-center bg-slate-50 rounded-lg px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-sm"
+                    style={{ background: 'var(--background)' }}
                   >
-                    <span className="font-medium text-slate-700">{r.mes}</span>
-                    <span className="text-slate-500">
+                    <span className="font-medium" style={{ color: 'var(--text)' }}>{r.mes}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>
                       {r.vendas ?? '—'} vendas (méd.) · {r.validacoes} validações
                     </span>
-                    <span className="text-xs text-slate-400">{r.origem}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{r.origem}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-100">
+            <div className="border-t pt-3" style={{ borderColor: 'var(--border)' }}>
               {!confirmandoExclusao ? (
                 <button
                   onClick={() => setConfirmandoExclusao(true)}
-                  className="text-sm text-red-600 hover:text-red-800 font-medium"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 transition-colors hover:text-red-800"
                 >
+                  <Trash2 className="h-4 w-4" aria-hidden />
                   Excluir loja da base
                 </button>
               ) : (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
+                <div className="animar-entrada space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
                   <p className="text-sm text-red-700">
                     Isso vai apagar a loja e todo o histórico de validações dela. Essa ação não pode ser desfeita. Confirma?
                   </p>
                   <div className="flex gap-2">
-                    <button
-                      onClick={excluirLoja}
-                      disabled={excluindo}
-                      className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg disabled:opacity-50"
-                    >
+                    <button onClick={excluirLoja} disabled={excluindo} className="btn btn-danger btn-sm">
                       {excluindo ? 'Excluindo...' : 'Sim, excluir'}
                     </button>
-                    <button
-                      onClick={() => setConfirmandoExclusao(false)}
-                      className="text-sm text-slate-500 hover:text-slate-700 px-4 py-1.5"
-                    >
+                    <button onClick={() => setConfirmandoExclusao(false)} className="btn btn-ghost btn-sm">
                       Cancelar
                     </button>
                   </div>

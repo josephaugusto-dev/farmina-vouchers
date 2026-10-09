@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ImageUp, X } from 'lucide-react'
 
 type Loja = { id: string; nome: string }
 type LojaExtraida = { lojaDetectada: string; validacoesPorMes: Record<string, number> }
@@ -141,71 +142,98 @@ export default function UploadImagemIA({
   )
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white">
-          <h2 className="text-lg font-bold text-blue-950">Upload com IA</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">×</button>
+    <div className="overlay-modal animar-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="modal-card animar-modal max-h-[90vh] w-full max-w-4xl overflow-y-auto">
+        <div
+          className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4"
+          style={{ borderColor: 'var(--border)' }}
+        >
+          <h2 className="text-lg font-bold" style={{ color: 'var(--primary-dark)' }}>
+            Upload com IA
+          </h2>
+          <button onClick={onClose} className="btn-icone" aria-label="Fechar">
+            <X className="h-5 w-5" aria-hidden />
+          </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="space-y-5 p-6">
           {!extracao && (
             <div>
-              <label className="block text-sm text-slate-600 mb-2">
-                Selecione o print enviado pela supervisora:
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) enviarImagem(file)
-                }}
-                className="text-sm text-slate-700"
-              />
-              {extraindo && (
-                <p className="text-sm text-blue-700 mt-3">
-                  Lendo a imagem com IA, isso pode levar até um minuto...
-                </p>
+              {extraindo ? (
+                <div className="zona-upload cursor-default!">
+                  <span className="h-7 w-7 animate-spin rounded-full border-2 border-(--primary)/30 border-t-(--primary)" />
+                  <p className="font-medium">Lendo a imagem com IA...</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Isso pode levar até um minuto.
+                  </p>
+                </div>
+              ) : (
+                <label className="zona-upload">
+                  <ImageUp className="h-7 w-7" aria-hidden />
+                  <span className="font-medium">Clique para escolher o print enviado pela supervisora</span>
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    PNG ou JPG
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      e.target.value = ''
+                      if (file) enviarImagem(file)
+                    }}
+                  />
+                </label>
               )}
-              {erro && <p className="text-sm text-red-600 mt-3">{erro}</p>}
+              {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
             </div>
           )}
 
           {extracao && (
             <>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {extracao.lojas.length} lojas detectadas · {extracao.meses.length} coluna(s) de dados.
                 Confira o vínculo de cada loja e o mês de cada coluna antes de salvar.
               </p>
 
               {!todosMesesValidos && (
-                <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   ⚠️ A imagem não trazia um mês reconhecível em uma ou mais colunas. Preencha o mês
                   correto (formato AAAA-MM) no campo abaixo do cabeçalho antes de salvar.
                 </p>
               )}
 
               {lojasDuplicadas.size > 0 && (
-                <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   ⚠️ Duas ou mais linhas detectadas estão apontando pra mesma loja no sistema — revise
                   as linhas destacadas em vermelho antes de salvar.
                 </p>
               )}
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+              <div
+                className="overflow-x-auto rounded-xl border"
+                style={{ borderColor: 'var(--border)' }}
+              >
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-100 text-slate-600 text-left">
+                  <thead
+                    className="text-left"
+                    style={{ background: 'var(--primary-light)', color: 'var(--primary-dark)' }}
+                  >
                     <tr>
-                      <th className="px-3 py-2 min-w-[200px]">Detectado na imagem</th>
-                      <th className="px-3 py-2 min-w-[220px]">Loja no sistema</th>
+                      <th className="min-w-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                        Detectado na imagem
+                      </th>
+                      <th className="min-w-55 px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                        Loja no sistema
+                      </th>
                       {extracao.meses.map((mes) => (
-                        <th key={mes} className="px-3 py-2 text-center min-w-[130px]">
+                        <th key={mes} className="min-w-32 px-3 py-2 text-center">
                           {MES_VALIDO.test(mes) ? (
-                            mes
+                            <span className="text-xs font-semibold uppercase tracking-wide">{mes}</span>
                           ) : (
                             <div>
-                              <p className="text-xs text-slate-400 normal-case mb-1">
+                              <p className="mb-1 text-xs font-normal normal-case text-slate-500">
                                 coluna não reconhecida
                               </p>
                               <input
@@ -215,10 +243,8 @@ export default function UploadImagemIA({
                                 onChange={(e) =>
                                   setMesesCorrigidos((m) => ({ ...m, [mes]: e.target.value }))
                                 }
-                                className={`w-full px-2 py-1 border rounded text-center text-slate-900 font-normal ${
-                                  MES_VALIDO.test(mesesCorrigidos[mes] ?? '')
-                                    ? 'border-slate-200'
-                                    : 'border-amber-400'
+                                className={`campo w-full text-center font-normal ${
+                                  MES_VALIDO.test(mesesCorrigidos[mes] ?? '') ? '' : 'border-amber-400!'
                                 }`}
                               />
                             </div>
@@ -234,18 +260,19 @@ export default function UploadImagemIA({
                       return (
                         <tr
                           key={loja.lojaDetectada}
-                          className={`border-t border-slate-100 ${conflito ? 'bg-red-50' : ''}`}
+                          className={`border-t ${conflito ? 'bg-red-50' : ''}`}
+                          style={{ borderColor: '#F0F2F5' }}
                         >
-                          <td className="px-3 py-2 text-slate-700">{loja.lojaDetectada}</td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text)' }}>
+                            {loja.lojaDetectada}
+                          </td>
                           <td className="px-3 py-2">
                             <select
                               value={idSelecionado ?? ''}
                               onChange={(e) =>
                                 setMapeamento((m) => ({ ...m, [loja.lojaDetectada]: e.target.value }))
                               }
-                              className={`w-full px-2 py-1 border rounded text-slate-900 ${
-                                conflito ? 'border-red-400' : 'border-slate-200'
-                              }`}
+                              className={`campo w-full py-1! ${conflito ? 'border-red-400!' : ''}`}
                             >
                               <option value="">Ignorar</option>
                               {lojas.map((l) => (
@@ -254,7 +281,11 @@ export default function UploadImagemIA({
                             </select>
                           </td>
                           {extracao.meses.map((mes) => (
-                            <td key={mes} className="px-3 py-2 text-center text-slate-600">
+                            <td
+                              key={mes}
+                              className="px-3 py-2 text-center"
+                              style={{ color: 'var(--text-secondary)' }}
+                            >
                               {loja.validacoesPorMes[mes] ?? 0}
                             </td>
                           ))}
@@ -266,14 +297,17 @@ export default function UploadImagemIA({
               </div>
 
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500">
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {totalMapeadas} de {extracao.lojas.length} lojas vinculadas
                 </p>
                 <button
                   onClick={salvarTudo}
                   disabled={salvando || totalMapeadas === 0 || lojasDuplicadas.size > 0 || !todosMesesValidos}
-                  className="bg-blue-900 hover:bg-blue-800 text-white font-medium px-5 py-2 rounded-lg disabled:opacity-50"
+                  className="btn btn-primary"
                 >
+                  {salvando && (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  )}
                   {salvando ? 'Salvando...' : `Salvar ${totalMapeadas} loja(s)`}
                 </button>
               </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { X } from 'lucide-react'
 
 export default function AdicionarLoja({
   onClose,
@@ -45,82 +46,85 @@ export default function AdicionarLoja({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl p-6 space-y-4">
+    <div className="overlay-modal animar-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="modal-card animar-modal w-full max-w-md space-y-4 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-blue-950">Adicionar loja à base</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">×</button>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--primary-dark)' }}>
+            Adicionar loja à base
+          </h2>
+          <button onClick={onClose} className="btn-icone" aria-label="Fechar">
+            <X className="h-5 w-5" aria-hidden />
+          </button>
         </div>
 
         <div>
-          <label className="text-xs text-slate-400 uppercase">Nome da loja *</label>
+          <label className="rotulo">Nome da loja *</label>
           <input
             type="text"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+            className="campo mt-1 w-full"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-slate-400 uppercase">Vendedor *</label>
+            <label className="rotulo">Vendedor *</label>
             <input
               type="text"
               value={vendedor}
               onChange={(e) => setVendedor(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+              className="campo mt-1 w-full"
             />
           </div>
           <div>
-            <label className="text-xs text-slate-400 uppercase">PIN *</label>
+            <label className="rotulo">PIN *</label>
             <input
               type="text"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+              className="campo mt-1 w-full"
             />
           </div>
         </div>
 
         <div>
-          <label className="text-xs text-slate-400 uppercase">Zona</label>
+          <label className="rotulo">Zona</label>
           <input
             type="text"
             value={zona}
             onChange={(e) => setZona(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+            className="campo mt-1 w-full"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-slate-400 uppercase">Telefone</label>
+            <label className="rotulo">Telefone</label>
             <input
               type="text"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+              className="campo mt-1 w-full"
             />
           </div>
           <div>
-            <label className="text-xs text-slate-400 uppercase">E-mail</label>
+            <label className="rotulo">E-mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400"
+              className="campo mt-1 w-full"
             />
           </div>
         </div>
 
         {erro && <p className="text-sm text-red-600">{erro}</p>}
 
-        <button
-          onClick={salvar}
-          disabled={salvando}
-          className="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 rounded-lg disabled:opacity-50"
-        >
+        <button onClick={salvar} disabled={salvando} className="btn btn-primary w-full">
+          {salvando && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          )}
           {salvando ? 'Salvando...' : 'Adicionar loja'}
         </button>
       </div>
